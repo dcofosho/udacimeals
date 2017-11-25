@@ -71,7 +71,8 @@ class App extends Component {
 
 		e.preventDefault()
 		this.setState(()=>({ loadingFood: true }))
-		//call the api fetch recipes function, and set state.food equal to the result, and
+		//call the api fetch recipes function, and set state.food equal to the result,
+		//(this is the only time there is a food property in the local state) and
 		//state.loadingFood to false
 		fetchRecipes(this.input.value).then((food)=>this.setState(()=>({
 				food,
@@ -139,6 +140,10 @@ class App extends Component {
 						))}
 					</div>
 				</div>
+				{/*
+					This is the food modal. It is open when the state foodModalOpen
+					property is equal to true, i.e. when the user clicks on the calendar icon
+				*/}
 				<Modal
 		          className='modal'
 		          overlayClassName='overlay'
@@ -147,13 +152,20 @@ class App extends Component {
 		          contentLabel='Modal'
 		        >
 		          <div>
-		            {loadingFood === true
+		            {//when the state loadingFood property is true, then the spinner is shown..
+		            loadingFood === true
 		              ? <Loading delay={200} type='spin' color='#222' className='loading' />
+		              	//..otherwise, the actual modal is shown
 		              : <div className='search-container'>
 		                  <h3 className='subheader'>
 		                    Find a meal for {capitalize(this.state.day)} {this.state.meal}.
 		                  </h3>
 		                  <div className='search'>
+		                  	{/* 
+		                  		This is the modal input, where
+								the user can search for food. Clicking the arrow button
+								runs the searchFood function
+		                  	*/}
 		                    <input
 		                      className='food-input'
 		                      type='text'
@@ -166,6 +178,16 @@ class App extends Component {
 		                        <ArrowRightIcon size={30}/>
 		                    </button>
 		                  </div>
+		              		{/*
+								If the user clicks the arrow button,
+								and the searchFood function returns a non-null
+								food, then the food is passed as a prop to a new
+								FoodList component. The FoodList component simply shows
+								the image and label for each recipe.
+								When an item in the food list is selected, the selectRecipe function
+								dispatches the addRecipe action, adds the new recipe to the store,
+								and closes the food modal.
+		              		*/}
 		                  {food !== null && (
 		                    <FoodList
 		                      food={food}
@@ -177,6 +199,13 @@ class App extends Component {
 		                </div>}
 		          </div>
 				</Modal>
+
+			{/*
+			This is the ingredients modal. It is open when the state ingredientsModalOpen property is true, 
+			i.e. when the user clicks the shopping cart button in the nav bar. 
+			This calls the generateShoppingList function to generate a list of ingredients from the state calendar,
+			then passes this list as props to a new ShoppingList component, which is a simple ul generate from the list.
+			*/}
 				<Modal
 		          className='modal'
 		          overlayClassName='overlay'
@@ -191,6 +220,28 @@ class App extends Component {
   }
 }
 
+/*
+map store calendar and food to props
+
+the calendar object  will look like this:
+{
+	monday:{
+		breakfast: 'eggs benedict', <<just has ID of food
+		lunch: 'mango smoothie',
+		dinner: 'chicken marsala'
+	},
+	...
+}
+
+the food object will look like
+	{
+		eggsBenedict:{
+			INFO
+		}
+	}
+
+
+*/
 function mapStateToProps({ calendar, food }){
 	const dayOrder = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 	//return object containing array of objects, one for each day
@@ -200,11 +251,15 @@ function mapStateToProps({ calendar, food }){
 			day,
 			//use reduce function to build up object containing meals for the day
 			meals: Object.keys(calendar[day]).reduce((meals, meal)=>{
-				//e.g. if calendar[sunday][breakfast] exists (say it's eggs benedict), then meals[breakfast] = eggs benedict..
+				/*
+				e.g. if calendar[sunday][breakfast] exists (say it's eggs benedict),
+				then meals[meal] = food[calendar[sunday][breakfast]
+				*/
 				meals[meal] = calendar[day][meal]
-					//..and food[calendar[sunday][breakfast]]=eggs benedict
 					? food[calendar[day][meal]]
-					//if calendar[sunday][breakfast] doesn't exist, then meals[breakfast] = null for the day currently being mapped over.
+					/*if calendar[sunday][breakfast] doesn't exist, then 
+					meals[breakfast] = null for Sunday.
+					*/
 					: null
 				return meals
 			},{})
@@ -212,10 +267,11 @@ function mapStateToProps({ calendar, food }){
 	}
 }
 
+/*bind addRecipe and removeFromCalendar to dispatch before they
+ever hit the component. The UI can dispatch these actions
+with the selectRecipe and remove functions 
+*/
 function mapDispatchToProps(dispatch){
-	//bind addRecipe and removeFromCalendar to dispatch before they
-	//ever hit the component. The UI can dispatch these actions
-	// with the selectRecipe and remove functions 
 	return{
 		selectRecipe: (data)=>dispatch(addRecipe(data)),
 		remove: (data)=>dispatch(removeFromCalendar(data))

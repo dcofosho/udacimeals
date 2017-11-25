@@ -6,7 +6,9 @@
     "react": "^16.1.0",
     "react-dom": "^16.1.0",
     "react-redux": "^5.0.6",
-    "react-scripts": "1.0.17"
+    "react-scripts": "1.0.17",
+    "redux-logger": "^3.0.6",
+    "redux-thunk": "^2.2.0"
   },
   "scripts": {
     "start": "react-scripts start",
